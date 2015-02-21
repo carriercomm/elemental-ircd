@@ -10,7 +10,7 @@ AC_PREREQ(2.57)
 dnl Sneaky way to get an Id tag into the configure script
 AC_COPYRIGHT([2014 elemental-ircd Team])
 
-AC_INIT([elemental-ircd],[6.6.2-pc])
+AC_INIT([elemental-ircd],[6.6.2+ponychat])
 
 AC_CONFIG_HEADER(include/setup.h)
 
