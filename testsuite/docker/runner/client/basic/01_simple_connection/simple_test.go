@@ -4,6 +4,7 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/thoj/go-ircevent"
 )
@@ -28,7 +29,6 @@ func TestBasicConnection(t *testing.T) {
 	})
 
 	conn.AddCallback("001", func(e *irc.Event) {
-		t.Log(e.Message())
 		wg.Done()
 	})
 
@@ -39,4 +39,44 @@ func TestBasicConnection(t *testing.T) {
 
 	go conn.Loop()
 	wg.Wait()
+}
+
+func TestNotAbleToSaySomething(t *testing.T) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	conn.AddCallback("404", func(e *irc.Event) {
+		wg.Done()
+	})
+
+	conn.Privmsg("#foo", "bar")
+
+	wg.Wait()
+}
+
+func TestJoinChannel(t *testing.T) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	conn.AddCallback("ERROR", func(e *irc.Event) {
+		t.Fatalf("%s", e.Message())
+	})
+
+	conn.AddCallback("353", func(e *irc.Event) {
+		wg.Done()
+	})
+
+	conn.Join("#foo")
+
+	wg.Wait()
+}
+
+func TestAbleToSaySomething(t *testing.T) {
+	conn.AddCallback("404", func(e *irc.Event) {
+		t.Fatal(e.Message())
+	})
+
+	conn.Privmsg("#foo", "bar")
+
+	time.Sleep(2 * time.Second)
 }
