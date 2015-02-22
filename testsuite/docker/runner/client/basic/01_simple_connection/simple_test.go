@@ -17,11 +17,15 @@ var (
 	conn *irc.Connection
 )
 
+// TestMain is the "main" wrapper for testing.
 func TestMain(m *testing.M) {
 	conn = irc.IRC("elemental_test", "user")
-	defer conn.Quit()
 
-	os.Exit(m.Run())
+	code := m.Run()
+
+	conn.Quit()
+
+	os.Exit(code)
 }
 
 // TestBasicConnection ensures that the test client can make a basic connection
