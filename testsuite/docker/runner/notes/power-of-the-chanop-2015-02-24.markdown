@@ -20,14 +20,14 @@ Voiced
 ------
 
 A Voiced User can:
-- [ ] speak over +m or a ban/quiet
+- [X] speak over +m or a ban/quiet
 
 A Voiced User cannot:
-- [ ] Kick people in channels
-- [ ] Set modes in channels
-  - [ ] channel properties
-  - [ ] ban-like modes
-  - [ ] key-like modes
+- [X] Kick people in channels
+- [X] Set modes in channels
+  - [X] channel properties
+  - [X] ban-like modes
+  - [X] key-like modes
 
 Half-Operator
 -------------

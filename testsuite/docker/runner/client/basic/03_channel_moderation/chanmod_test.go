@@ -8,14 +8,15 @@ import (
 	"os"
 	"sync"
 	"testing"
-	_ "time"
+	"time"
 
 	"github.com/thoj/go-ircevent"
 )
 
 var (
-	conn     *irc.Connection
-	peonconn *irc.Connection
+	conn       *irc.Connection
+	peonconn   *irc.Connection
+	voicedconn *irc.Connection
 )
 
 // TestMain is the "main" wrapper for testing.
@@ -33,6 +34,13 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 	go peonconn.Loop()
+
+	voicedconn = irc.IRC("elemental_voiced", "user")
+	err = voicedconn.Connect(os.Getenv("IRCD_PORT_6667_TCP_ADDR") + ":6667")
+	if err != nil {
+		log.Fatal(err)
+	}
+	go voicedconn.Loop()
 
 	code := m.Run()
 
@@ -190,6 +198,105 @@ func TestPeonCannotSpeakOverStuff(t *testing.T) {
 	wg.Wait()
 
 	conn.Mode("#yolo", "-q "+peonconn.GetNick())
+
+	wg.Add(999999)
+}
+
+func TestVoicedUserInitialSetup(t *testing.T) {
+	voicedconn.Join("#yolo")
+	time.Sleep(250 * time.Millisecond)
+	conn.Mode("#yolo", "+v "+voicedconn.GetNick())
+}
+
+func TestVoicedUserCannotKick(t *testing.T) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	voicedconn.AddCallback("482", func(e *irc.Event) {
+		wg.Done()
+	})
+
+	voicedconn.SendRaw("KICK #yolo elemental_chanop")
+
+	wg.Wait()
+
+	wg.Add(9999999)
+}
+
+func TestVoicedUserCannotSetChannelProperties(t *testing.T) {
+	modes := []string{
+		"n", "t", "s", "p", "m", "i", "r", "c", "d", "g", "z", "u",
+		"L", "P", "F", "Q", "C", "D", "T", "E", "J", "K",
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(modes))
+
+	voicedconn.AddCallback("482", func(e *irc.Event) {
+		wg.Done()
+	})
+
+	voicedconn.AddCallback("481", func(e *irc.Event) {
+		wg.Done()
+	})
+
+	conn.AddCallback("MODE", func(e *irc.Event) {
+		t.Fatal(e.Message())
+	})
+
+	for _, mode := range modes {
+		voicedconn.Mode("#yolo", "+"+mode)
+	}
+
+	wg.Wait()
+	wg.Add(999999)
+}
+
+func TestVoicedUserCannotSetChannelBans(t *testing.T) {
+	modes := []string{"q", "e", "I", "b"}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(modes))
+
+	voicedconn.AddCallback("482", func(e *irc.Event) {
+		wg.Done()
+	})
+
+	for _, mode := range modes {
+		voicedconn.Mode("#yolo", "+"+mode+" swag")
+	}
+
+	wg.Wait()
+	wg.Add(999999)
+}
+
+func TestVoicedUserCanSpeakOverStuff(t *testing.T) {
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	conn.AddCallback("PRIVMSG", func(e *irc.Event) {
+		wg.Done()
+	})
+
+	voicedconn.AddCallback("404", func(e *irc.Event) {
+		t.Fatal(e.Message())
+	})
+
+	conn.Mode("#yolo", "+m")
+	voicedconn.Privmsg("#yolo", "nuuuuuuuuuuuuuuuuu")
+	wg.Wait()
+	wg.Add(1)
+
+	conn.Mode("#yolo", "+b "+voicedconn.GetNick())
+	voicedconn.Privmsg("#yolo", "nuuuuuuuuuuuuuuuuu")
+	wg.Wait()
+	wg.Add(1)
+
+	conn.Mode("#yolo", "-b+q "+voicedconn.GetNick()+" "+peonconn.GetNick())
+	voicedconn.Privmsg("#yolo", "nuuuuuuuuuuuuuuuuu")
+	wg.Wait()
+
+	conn.Mode("#yolo", "-q "+voicedconn.GetNick())
 
 	wg.Add(999999)
 }
