@@ -202,6 +202,24 @@ func TestPeonCannotSpeakOverStuff(t *testing.T) {
 	wg.Add(999999)
 }
 
+func TestPeonCannotSetPrefixModes(t *testing.T) {
+	modes := []string{"v", "h", "o", "a", "y"}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(modes))
+
+	peonconn.AddCallback("482", func(e *irc.Event) {
+		wg.Done()
+	})
+
+	for _, mode := range modes {
+		peonconn.Mode("#yolo", "+"+mode+" "+conn.GetNick())
+	}
+
+	wg.Wait()
+	wg.Add(999999)
+}
+
 func TestVoicedUserInitialSetup(t *testing.T) {
 	voicedconn.Join("#yolo")
 	time.Sleep(250 * time.Millisecond)
@@ -298,5 +316,23 @@ func TestVoicedUserCanSpeakOverStuff(t *testing.T) {
 
 	conn.Mode("#yolo", "-q "+voicedconn.GetNick())
 
+	wg.Add(999999)
+}
+
+func TestVoicedUserCannotSetPrefixModes(t *testing.T) {
+	modes := []string{"v", "h", "o", "a", "y"}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(modes))
+
+	voicedconn.AddCallback("482", func(e *irc.Event) {
+		wg.Done()
+	})
+
+	for _, mode := range modes {
+		voicedconn.Mode("#yolo", "+"+mode+" "+conn.GetNick())
+	}
+
+	wg.Wait()
 	wg.Add(999999)
 }

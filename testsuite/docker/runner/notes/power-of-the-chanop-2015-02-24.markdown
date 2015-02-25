@@ -14,6 +14,7 @@ A Peon cannot:
   - [X] channel properties
   - [X] ban-like modes
   - [X] key-like modes
+  - [X] prefix modes
 - [X] speak over +m or a ban/quiet
 
 Voiced
@@ -28,6 +29,7 @@ A Voiced User cannot:
   - [X] channel properties
   - [X] ban-like modes
   - [X] key-like modes
+  - [X] prefix modes
 
 Half-Operator
 -------------
